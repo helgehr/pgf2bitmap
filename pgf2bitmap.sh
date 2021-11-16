@@ -32,6 +32,8 @@ if [[ ! -e $1 ]]; then
     exit 1
 fi
 
+input_file="$(basename $1)"
+output_file="${input_file%".pgf"}.${OUTTYPE}"
 
 echo "\documentclass[preview]{standalone}
 \usepackage{graphicx}
@@ -42,6 +44,6 @@ echo "\documentclass[preview]{standalone}
 \end{document}" > /tmp/pgf2bitmap_temp.tex
 
 pdflatex -shell-escape -output-directory=/tmp /tmp/pgf2bitmap_temp.tex
-convert -density $DENSITY /tmp/pgf2bitmap_temp.pdf -flatten out.$OUTTYPE
+convert -density $DENSITY /tmp/pgf2bitmap_temp.pdf -flatten $output_file
 
 exit 0
