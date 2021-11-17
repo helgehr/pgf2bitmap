@@ -1,7 +1,7 @@
 #!/bin/bash
 
 OUTTYPE="png" # Standard out type
-DENSITY="300"
+DENSITY="300" # Standard dpi
 
 POSITIONAL=()
 while [[ $# -gt 0 ]]; do
@@ -26,24 +26,33 @@ while [[ $# -gt 0 ]]; do
 done
 
 set -- "${POSITIONAL[@]}" # restore positional parameters
+echo ${POSITIONAL[@]}
+((CONVERT_ARG_LEN=${#POSITIONAL[@]} - 1))
+CONVERT_ARGS="${POSITIONAL[@]::${CONVERT_ARG_LEN}}"
 
-if [[ ! -e $1 ]]; then
-    echo "Usage: pgf2bitmap <options> file.pgf"
-    exit 1
+FILE="${POSITIONAL[-1]}"
+
+if [[ ! -e $FILE ]]; then
+	echo "Usage: pgf2bitmap <options> file.pgf"
+	exit 1
 fi
 
-input_file="$(basename $1)"
+input_file="$(basename $FILE)"
 output_file="${input_file%".pgf"}.${OUTTYPE}"
 
 echo "\documentclass[preview]{standalone}
 \usepackage{graphicx}
-\graphicspath{{$(dirname $1)}}
+\graphicspath{{$(dirname $FILE)}}
 \usepackage{pgf}
 \begin{document}
-    \input{$1}
+	\input{$FILE}
 \end{document}" > /tmp/pgf2bitmap_temp.tex
 
 pdflatex -shell-escape -output-directory=/tmp /tmp/pgf2bitmap_temp.tex
-convert -density $DENSITY /tmp/pgf2bitmap_temp.pdf -flatten $output_file
+if (( CONVERT_ARG_LEN > 0 )); then
+	convert -density $DENSITY /tmp/pgf2bitmap_temp.pdf "${CONVERT_ARGS[@]}" -flatten $output_file
+else
+	convert -density $DENSITY /tmp/pgf2bitmap_temp.pdf -flatten $output_file
+fi
 
 exit 0
